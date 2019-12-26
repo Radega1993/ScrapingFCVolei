@@ -15,13 +15,7 @@ class PYbd(object):
 
             if data != []:
                 for key, value in data.items():
-                    value = value.encode("utf-8", "ignore")
-                    if b'\xC2\x91' in value:
-                        re.sub(r'[\xc2\x91]',"\'",value)
-                    if b'\xC2\x91B\xC2\x91' in value:
-                        re.sub(r'[\xC2\x91B\xC2\x91]',"\'b\'",value)
-
-
+                    value = re.sub('[^a-zA-Z0-9òàèìùáéíóúÀÈÌÒÙÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ: ]', ' ', value)
                     if key == "nombre_liga":
                         nombre_liga = value
                     elif key == "grupo":
