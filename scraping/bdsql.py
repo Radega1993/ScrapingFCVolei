@@ -16,11 +16,14 @@ class PYbd(object):
             if data != []:
                 for key, value in data.items():
                     value = re.sub('[^a-zA-Z0-9òàèìùáéíóúÀÈÌÒÙÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ: ]', ' ', value)
+                    value = re.sub(r'\s+', ' ', value).strip()
                     if key == "nombre_liga":
                         nombre_liga = value
                     elif key == "grupo":
+                        value = re.sub('Grupo: ', '', value)
                         grupo = value
                     elif key == "numero_jornada":
+                        value = re.sub('JORNADA NÚMERO', '', value)
                         numero_jornada = value
                     elif key == "local":
                         local = value
