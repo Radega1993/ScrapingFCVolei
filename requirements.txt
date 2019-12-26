@@ -1,4 +1,5 @@
 beautifulsoup4
 lxml
-requests
-python-dateutil
+requests==2.11.1
+pyrebase
+mysql-connector
