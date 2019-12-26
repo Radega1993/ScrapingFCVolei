@@ -2,6 +2,9 @@ import requests
 import re
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+import sys
+
+from bdsql import PYbd
 
 class FCvoleiCrawler(object):
 
@@ -21,6 +24,7 @@ class FCvoleiCrawler(object):
             return ""
         return html.content.decode('latin-1')
 
+
     def get_links(self, url):
         html = self.get_html(url)
         soup = BeautifulSoup(html, features='html.parser')
@@ -37,21 +41,22 @@ class FCvoleiCrawler(object):
 
         return (self.links)
 
+
     def remove_tags(self, text):
         return self.TAG_RE.sub('', text)
 
+
     def get_info(self, url):
         req = self.get_html(url)
-        noJornada = ['no data','no data','no data','no data','no data']
+        noJornada = ["No data"] * 5
         data = []
-
         soup = BeautifulSoup(req, features='html.parser')
 
         header = soup.div.h2
         try:
             nombre_liga, categoria, fase, grupo, vuelta = str(header).split('<br/>', 4)
         except:
-            data.append(noJornada)
+            nombre_liga = categoria = fase = grupo = vuelta = "No data"
 
         jornada_box = soup.find("div", attrs={'id':'jornada_numero'})
         try:
@@ -62,41 +67,62 @@ class FCvoleiCrawler(object):
 
         tabla_box = soup.find('div', attrs={'class':'resultados'})
 
-        rows = tabla_box.find_all('tr')
-        for row in rows:
-            cols = row.find_all('td')
-            cols = [ele.text.strip() for ele in cols]
-            data.append([ele for ele in cols if ele])
+        if tabla_box is not None:
+            rows = tabla_box.find_all('tr')
 
-        del data[0]
-        for element in data:
-            if len(element) < 2:
-                data.remove(element)
-            if len(element) is 3:
-                data.append(element)
-            if len(element) > 5:
-                for data in element:
-                    del element[5:]
+            for row in rows:
+                cols = row.find_all('td')
+                cols = [ele.text.strip() for ele in cols]
+                data.append([ele for ele in cols if ele])
 
-        '''
-        msg = ""
+            del data[0]
+            for element in data:
+                if len(element) < 2:
+                    data.remove(element)
+                if len(element) > 5:
+                    for info in element:
+                        del element[5:]
 
-        msg += self.remove_tags(nombre_liga) + '\n'
-        msg += self.remove_tags(grupo) + '\n'
-        msg += self.remove_tags(numero_jornada) + '\n \n'
+            nom_liga = self.remove_tags(nombre_liga)
+            grup = self.remove_tags(grupo)
+            num_jornada = self.remove_tags(numero_jornada)
 
-        for element in data:
-            msg += 'Local: '+ element[0] + '\n'
-            msg += 'Visitant: '+ element[1] + '\n'
-            msg += 'Día: '+ element[2] + '\n'
-            msg += 'Hora: '+ element[3] + '\n'
-            msg += 'Lloc: '+ element[4] + '\n \n'
-        '''
-        dataend = []
+            for element in data:
+                try:
+                    local = element[0]
+                except Exception as e:
+                    local = "No data"
+                try:
+                    visitant = element[1]
+                except Exception as e:
+                    visitant = "No data"
+                try:
+                    dia = element[2]
+                except Exception as e:
+                    dia = "No data"
+                try:
+                    hora = element[3]
+                except Exception as e:
+                    hora = "No data"
+                try:
+                    lugar = element[4]
+                except Exception as e:
+                    lugar = "No data"
 
-        for element in data:
-            dataend.append(element)
-        return dataend
+
+            data = {
+                "nombre_liga":nom_liga,
+                "grupo":grup,
+                "numero_jornada":num_jornada,
+                "local":local,
+                "visitant":visitant,
+                "dia":dia,
+                "hora":hora,
+                "lugar":lugar
+            }
+
+        return data
+
 
     def crawl(self, url):
         links = self.get_links(url)
@@ -106,8 +132,8 @@ class FCvoleiCrawler(object):
             self.visited.add(link)
             data = self.get_info(link)
 
-            print(data)
-
+            bd = PYbd()
+            bd.push_data(data)
 
             self.crawl(link)
 
@@ -115,6 +141,8 @@ class FCvoleiCrawler(object):
     def start(self):
         self.crawl(self.starting_url)
 
+
 if __name__ == "__main__":
+    sys.setrecursionlimit(10000)
     crawler = FCvoleiCrawler("http://competicio.fcvoleibol.cat/calendaris.asp")
     crawler.start()
