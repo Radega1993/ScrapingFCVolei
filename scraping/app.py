@@ -50,6 +50,7 @@ class FCvoleiCrawler(object):
         req = self.get_html(url)
         noJornada = ["No data"] * 5
         data = []
+        data_list = []
         soup = BeautifulSoup(req, features='html.parser')
 
         header = soup.div.h2
@@ -110,18 +111,18 @@ class FCvoleiCrawler(object):
                     lugar = "No data"
 
 
-            data = {
-                "nombre_liga":nom_liga,
-                "grupo":grup,
-                "numero_jornada":num_jornada,
-                "local":local,
-                "visitant":visitant,
-                "dia":dia,
-                "hora":hora,
-                "lugar":lugar
-            }
-
-        return data
+                data = {
+                    "nombre_liga":nom_liga,
+                    "grupo":grup,
+                    "numero_jornada":num_jornada,
+                    "local":local,
+                    "visitant":visitant,
+                    "dia":dia,
+                    "hora":hora,
+                    "lugar":lugar
+                }
+                data_list.append(data)
+        return data_list
 
 
     def crawl(self, url):
@@ -135,7 +136,7 @@ class FCvoleiCrawler(object):
             bd = PYbd()
             bd.push_data(data)
 
-            self.crawl(link)
+            #self.crawl(link)
 
 
     def start(self):
